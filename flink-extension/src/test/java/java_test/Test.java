@@ -87,7 +87,6 @@ public class Test {
             while (true) {
                 ConsumerRecords<byte[], byte[]> records = consumer.poll(Duration.ofMillis(500));
                 for (ConsumerRecord<byte[], byte[]> record : records) {
-                    System.out.println("woc: " + Arrays.toString(record.value()));
                     String key   = record.key() == null ? null : new String(record.key(), StandardCharsets.UTF_8);
                     String value = record.value() == null ? null : new String(record.value(), StandardCharsets.UTF_8);
 

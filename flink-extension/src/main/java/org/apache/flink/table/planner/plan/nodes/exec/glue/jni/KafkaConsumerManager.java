@@ -24,7 +24,6 @@ public class KafkaConsumerManager {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
 
-        System.out.println("properties.get(\"auto.offset.reset\"): " + properties.get("auto.offset.reset"));
         consumer = new KafkaConsumer<>(props);
         consumer.subscribe(Collections.singletonList(topicName));
     }
@@ -41,7 +40,6 @@ public class KafkaConsumerManager {
                 geshu++;
             }
         }
-        System.out.println("KafkaConsumer已经成功读取到：" + geshu + "条数据");
         if (jsonArray.length() > 1) {
             jsonArray.setLength(jsonArray.length() - 1);
         }
@@ -54,7 +52,6 @@ public class KafkaConsumerManager {
     }
 
     public void commit() {
-        System.out.println("正在提交commitSync！");
         consumer.commitSync();
     }
 }

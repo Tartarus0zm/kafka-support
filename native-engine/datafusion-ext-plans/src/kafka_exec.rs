@@ -179,8 +179,6 @@ impl ExecutionPlan for KafkaExec {
         partition_index: usize,
         context: Arc<TaskContext>,
     ) -> Result<SendableRecordBatchStream> {
-        println!("now execute kafka_exec");
-        println!("base_config: {:?}", self.base_config);
         let baseline_metrics = BaselineMetrics::new(&self.metrics, partition_index);
         let elapsed_compute = baseline_metrics.elapsed_compute().clone();
         let _timer = elapsed_compute.timer();
@@ -194,7 +192,6 @@ impl ExecutionPlan for KafkaExec {
             Some(partition_index),
         ));
         self.metrics.register(io_time_metric);
-        println!("self.kafka_resource_id： {:?}", self.kafka_resource_id);
 
 
         // get fs object from jni bridge resource
@@ -271,6 +268,5 @@ fn conv_record_batch(val: Value, schema: Arc<Schema>) -> RecordBatch {
         }
     }
     let record_batch = RecordBatch::try_new(schema, columns).unwrap();
-    println!("最后创建的record batch为: {:?}", record_batch);
     record_batch
 }
