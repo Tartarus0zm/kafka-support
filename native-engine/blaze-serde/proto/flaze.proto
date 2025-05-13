@@ -1,0 +1,249 @@
+syntax = "proto3";
+
+package plan.protobuf;
+
+option java_multiple_files = true;
+option java_package = "org.apache.flink.flaze.plan.protobuf";
+// option java_package = "org.apache.flink.table.planner.flaze.plan.protobuf";
+
+
+// ---------------------------PhysicalPlanNode---------------------------
+message PhysicalPlanNode {
+    oneof PhysicalPlanType {
+        KafkaScanExecNode kafka_scan = 9;
+    }
+}
+
+message KafkaScanExecNode {
+    KafkaScanExecConf base_conf = 1;
+    string kafkaResourceId = 2;
+}
+
+message KafkaScanExecConf {
+    Schema schema = 1;
+    repeated uint32 projection = 2;
+    ScanLimit limit = 3;
+}
+
+
+
+
+
+
+
+
+
+
+message Schema {
+    repeated Field columns = 1;
+}
+
+message Field {
+    string name = 1;
+    ArrowType arrow_type = 2;
+    bool nullable = 3;
+    repeated Field children = 4; // TODO: for Union/Struct
+}
+
+message ScanLimit {
+    uint32 limit = 1;
+}
+
+message ArrowType {
+    oneof arrow_type_enum {
+        EmptyMessage NONE = 1;     // arrow::Type::NA
+        EmptyMessage BOOL = 2;     // arrow::Type::BOOL
+        EmptyMessage UINT8 = 3;    // arrow::Type::UINT8
+        EmptyMessage INT8 = 4;     // arrow::Type::INT8
+        EmptyMessage UINT16 = 5;   // represents arrow::Type fields in src/arrow/type.h
+        EmptyMessage INT16 = 6;
+        EmptyMessage UINT32 = 7;
+        EmptyMessage INT32 = 8;
+        EmptyMessage UINT64 = 9;
+        EmptyMessage INT64 = 10;
+        EmptyMessage FLOAT16 = 11;
+        EmptyMessage FLOAT32 = 12;
+        EmptyMessage FLOAT64 = 13;
+        EmptyMessage UTF8 = 14;
+        EmptyMessage BINARY = 15;
+        EmptyMessage DATE32 = 16;
+        EmptyMessage DATE64 = 17;
+        TimeUnit DURATION = 18;
+        Timestamp TIMESTAMP = 19;
+    }
+}
+
+message EmptyMessage{}
+
+enum TimeUnit {
+    Second = 0;
+    Millisecond = 1;
+    Microsecond = 2;
+    Nanosecond = 3;
+}
+
+message Timestamp {
+    TimeUnit time_unit = 1;
+    string timezone = 2;
+}
+
+// ----------------------------------exchange算子所需--------------------------------
+message ShuffleReader {
+    bytes data = 1;
+}
+
+
+// ----------------------------------exchange算子所需--------------------------------
+message BroadcastJoinExecNode {
+    Schema schema = 1;
+    PhysicalPlanNode left = 2;
+    PhysicalPlanNode right = 3;
+    repeated JoinOn on = 4;
+    JoinType join_type = 5;
+    JoinSide broadcast_side = 6;
+}
+
+message JoinOn {
+    PhysicalExprNode left = 1;
+    PhysicalExprNode right = 2;
+}
+
+enum JoinSide {
+    LEFT_SIDE = 0;
+    RIGHT_SIDE = 1;
+}
+
+enum JoinType {
+    INNER = 0;
+    LEFT = 1;
+    RIGHT = 2;
+    FULL = 3;
+    SEMI = 4;
+    ANTI = 5;
+    EXISTENCE = 6;
+}
+
+// ---------------------------AggExecNode 所需---------------------------
+
+enum AggExecMode {
+    HASH_AGG = 0;
+    SORT_AGG = 1;
+}
+
+enum AggMode {
+    PARTIAL = 0;
+    PARTIAL_MERGE = 1;
+    FINAL = 2;
+}
+
+message PhysicalAggExprNode {
+    AggFunction agg_function = 1;
+    repeated PhysicalExprNode children = 2;
+}
+
+enum AggFunction {
+    MIN = 0;
+    MAX = 1;
+    SUM = 2;
+    AVG = 3;
+    COUNT = 4;
+    COLLECT_LIST = 5;
+    COLLECT_SET = 6;
+    FIRST = 7;
+    FIRST_IGNORES_NULL = 8;
+    BLOOM_FILTER = 9;
+    BRICKHOUSE_COLLECT = 1000;
+    BRICKHOUSE_COMBINE_UNIQUE = 1001;
+}
+
+message PhysicalScalarFunctionNode {
+    string name = 1;
+    ScalarFunction fun = 2;
+    repeated PhysicalExprNode args = 3;
+    ArrowType return_type = 4;
+}
+
+enum ScalarFunction {
+    Abs=0;
+    Acos=1;
+    Asin=2;
+    Atan=3;
+    Ascii=4;
+    Ceil=5;
+    Cos=6;
+    Digest=7;
+    Exp=8;
+    Floor=9;
+    Ln=10;
+    Log=11;
+    Log10=12;
+    Log2=13;
+    Round=14;
+    Signum=15;
+    Sin=16;
+    Sqrt=17;
+    Tan=18;
+    Trunc=19;
+    NullIf=20;
+    RegexpMatch=21;
+    BitLength=22;
+    Btrim=23;
+    CharacterLength=24;
+    Chr=25;
+    Concat=26;
+    ConcatWithSeparator=27;
+    DatePart=28;
+    DateTrunc=29;
+    InitCap=30;
+    Left=31;
+    Lpad=32;
+    Lower=33;
+    Ltrim=34;
+    MD5=35;
+    // NullIf=36;
+    OctetLength=37;
+    Random=38;
+    RegexpReplace=39;
+    Repeat=40;
+    Replace=41;
+    Reverse=42;
+    Right=43;
+    Rpad=44;
+    Rtrim=45;
+    SHA224=46;
+    SHA256=47;
+    SHA384=48;
+    SHA512=49;
+    SplitPart=50;
+    StartsWith=51;
+    Strpos=52;
+    Substr=53;
+    ToHex=54;
+    ToTimestamp=55;
+    ToTimestampMillis=56;
+    ToTimestampMicros=57;
+    ToTimestampSeconds=58;
+    Now=59;
+    Translate=60;
+    Trim=61;
+    Upper=62;
+    Coalesce=63;
+    SparkExtFunctions=10000;
+}
+
+// ---------------------------单算子所需，后续删除---------------------------
+// int[] 类型
+message PhysicalIntArray{
+    repeated int32 int_value = 1;
+}
+
+// RowType 类型
+message PhysicalRowType{
+    repeated PhysicalRowField rowField = 1;
+}
+
+// RowField 类型
+message PhysicalRowField{
+    string name = 1;
+    string type = 2;
+}
